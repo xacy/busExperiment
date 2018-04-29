@@ -8,7 +8,8 @@
 * Basic layout
 * Recent components
 * Local storage recent queries
-* Info component
+
 
 ## Done
 * ~~Do a basic query with vue-resource an do a preliminary parsing of the web.~~
+* ~~Info component~~

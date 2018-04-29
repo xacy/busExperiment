@@ -3,8 +3,9 @@
     <img src="./assets/logo.png">
     <h1>{{ msg }}</h1>
     <h2>Essential Links</h2>
-    <p>Parada: </p></p><input type="number" v-model="stopNumber"/>
+    <p>Parada: </p><input type="number" v-model="stopNumber"/>
     <button @click="queryStop">Consultar</button>
+    <stop-info :stopInfo="queriedStop"></stop-info>
     <ul>
       <li><a href="https://vuejs.org" target="_blank">Core Docs</a></li>
       <li><a href="https://forum.vuejs.org" target="_blank">Forum</a></li>
@@ -23,50 +24,57 @@
 
 <script>
 const cheerio = require('cheerio');
-
+import StopInfo from './components/StopInfo';
 export default {
   name: 'app',
+  components: {
+    StopInfo
+  },
   data () {
     return {
       msg: 'Auvasa times',
       recent: [],
       stopNumber: '',
-      baseUrl: 'http://www.auvasa.es/parada.asp?codigo='
+      queriedStop: { stopNumber: 0 , info: []},/*{ time: 0, name: 'Aún no se ha consultado', line:0 },*/
+      baseUrl: 'http://www.auvasa.es/parada.asp?codigo=',
+      recentStops: []
     }
   },
   methods:{
     queryStop(){
       console.log(this.$http);
+      this.queriedStop={stopNumber: 0 , info: []};
+      this.queriedStop.stopNumber=this.stopNumber;
+      this.queriedStop.info=[];
+      let self=this;
       this.$http.get(this.baseUrl+this.stopNumber).then(response => {
-        let times=[];
         // get body data
         let someData = response.body;
         console.log(someData);
         const stopHtml = cheerio.load(someData);
         stopHtml('table').find('tr').each(function(i,element){
-          let time={};
+          let lines = {};
           stopHtml(element).find('td').each(function (i,element) {
             console.log(stopHtml(element).text());
             if(i==0){
-              time.line=stopHtml(element).text();
+              lines.line=stopHtml(element).text();
             }
             else if(i==3){
-              time.name=stopHtml(element).text();
+              lines.name=stopHtml(element).text();
             }
             else if(i==4){
-              time.time=stopHtml(element).text();
+              lines.time=stopHtml(element).text();
             }
           });
-          times.push(time);
+          self.queriedStop.info.push(lines);
         });
-        console.log(times);
-
+        console.log(self.queriedStop);
+        this.recentStops.push(self.queriedStop);
+        console.log("Recents: ");
+        console.log(this.recentStops);
       }, response => {
         // error callback
       });
-      /*const stopHtml = cheerio.load(this.baseUrl+this.stopNumber).then(data => {
-        console.log(stopHtml('table').find('tr').length);
-      })*/
 
     }
   }
