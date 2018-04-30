@@ -1,57 +1,69 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <h1>{{ msg }}</h1>
-    <h2>Essential Links</h2>
-    <p>Parada: </p><input type="number" v-model="stopNumber"/>
-    <button @click="queryStop">Consultar</button>
+    <div class="columns is-centered content">
+      <div class="column is-half">
+        <h1>Consulta rápida de tiempos de autobuses</h1>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <div class="field">
+          <label class="label">Número de parada: </label>
+          <div class="control">
+            <input type="number" class="input" v-model="stopNumber"/>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <div class="control">
+          <button @click.prevent="queryStop" class="button is-link">Consultar</button>
+        </div>
+      </div>
+    </div>
     <stop-info :stopInfo="queriedStop"></stop-info>
-    <ul>
-      <li><a href="https://vuejs.org" target="_blank">Core Docs</a></li>
-      <li><a href="https://forum.vuejs.org" target="_blank">Forum</a></li>
-      <li><a href="https://chat.vuejs.org" target="_blank">Community Chat</a></li>
-      <li><a href="https://twitter.com/vuejs" target="_blank">Twitter</a></li>
-    </ul>
-    <h2>Ecosystem</h2>
-    <ul>
-      <li><a href="http://router.vuejs.org/" target="_blank">vue-router</a></li>
-      <li><a href="http://vuex.vuejs.org/" target="_blank">vuex</a></li>
-      <li><a href="http://vue-loader.vuejs.org/" target="_blank">vue-loader</a></li>
-      <li><a href="https://github.com/vuejs/awesome-vue" target="_blank">awesome-vue</a></li>
-    </ul>
+    <recent-stops :recents="recentStops"></recent-stops>
   </div>
 </template>
 
 <script>
 const cheerio = require('cheerio');
+import axios from 'axios';
 import StopInfo from './components/StopInfo';
+import RecentStops from './components/RecentStops';
 export default {
   name: 'app',
   components: {
-    StopInfo
+    StopInfo,
+    RecentStops
   },
   data () {
     return {
       msg: 'Auvasa times',
       recent: [],
       stopNumber: '',
-      queriedStop: { stopNumber: 0 , info: []},/*{ time: 0, name: 'Aún no se ha consultado', line:0 },*/
+      queriedStop: { stopNumber: 0 , info: [{line: '-', name: 'Introduzca un nº de parada', time: '-'}]},/*{ time: 0, name: 'Aún no se ha consultado', line:0 },*/
       baseUrl: 'http://www.auvasa.es/parada.asp?codigo=',
       recentStops: []
     }
   },
   methods:{
     queryStop(){
-      console.log(this.$http);
+      //console.log(this.$http);
       this.queriedStop={stopNumber: 0 , info: []};
       this.queriedStop.stopNumber=this.stopNumber;
       this.queriedStop.info=[];
+      this.queriedStop.lastQuery=new Date();
       let self=this;
-      this.$http.get(this.baseUrl+this.stopNumber).then(response => {
-        // get body data
-        let someData = response.body;
-        console.log(someData);
+      axios.get(this.baseUrl+this.stopNumber, { crossdomain: true }).then(function(response) {
+        //console.log("in response"+response);
+        let someData = response.data;
+        //console.log(someData);
         const stopHtml = cheerio.load(someData);
+        self.queriedStop.street=stopHtml('div.col_three_fifth').find('h5').text();
+        self.queriedStop.street=self.queriedStop.street.substring(0,self.queriedStop.street.indexOf('('))
         stopHtml('table').find('tr').each(function(i,element){
           let lines = {};
           stopHtml(element).find('td').each(function (i,element) {
@@ -66,16 +78,36 @@ export default {
               lines.time=stopHtml(element).text();
             }
           });
-          self.queriedStop.info.push(lines);
-        });
-        console.log(self.queriedStop);
-        this.recentStops.push(self.queriedStop);
-        console.log("Recents: ");
-        console.log(this.recentStops);
-      }, response => {
-        // error callback
-      });
+          if(lines.line!=undefined){
+            self.queriedStop.info.push(lines);
+          }
 
+        });
+        //console.log(self.queriedStop);
+        if(!self.isInRecents(self.queriedStop)){
+          self.recentStops.push(self.queriedStop);
+        }
+        else{
+          self.recentStops=self.recentStops;
+        }
+        //console.log("Recents: ");
+        //console.log(this.recentStops);
+      }).catch(function (error){
+        console.log('axios error'+error);
+      });
+    },
+    isInRecents(newStop){
+      for (let i = 0; i < this.recentStops.length; i++) {
+        if (this.recentStops[i].stopNumber === newStop.stopNumber) {
+          this.recentStops[i].lastQuery=new Date();
+          let temp=this.recentStops[i];
+          this.recentStops.splice(i,1);
+          this.recentStops.push(temp);
+          //console.log(this.recentStops[i].lastQuery);
+          return true;
+        }
+      }
+      return false;
     }
   }
 }
@@ -86,7 +118,7 @@ export default {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
+  /*text-align: center;*/
   color: #2c3e50;
   margin-top: 60px;
 }

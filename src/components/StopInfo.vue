@@ -1,7 +1,9 @@
 <template>
   <div class="info">
-      <table align="center">
-        <thead>
+    <div class="columns is-centered">
+      <div class="column is-half">
+        <table align="left" class="table is-striped">
+          <thead>
           <th>
             Línea
           </th>
@@ -11,33 +13,38 @@
           <th>
             Tiempo estimado.
           </th>
-        </thead>
-        <tr v-for="lineInfo in stopInfo.info">
-          <td>
-            {{ lineInfo.line}}
-          </td>
-          <td>
-            {{ lineInfo.name }}
-          </td>
-          <td>
-            {{ lineInfo.time }}
-          </td>
-
-        </tr>
-      </table>
+          </thead>
+          <tbody>
+          <tr v-for="lineInfo in stopInfo.info">
+            <td>
+              {{ lineInfo.line}}
+            </td>
+            <td>
+              {{ lineInfo.name }}
+            </td>
+            <td>
+              {{ lineInfo.time }}
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
     export default {
       props: {
-        stopInfo: Object
+        stopInfo: {
+          type: Object
+        }
       }
     }
 </script>
 
-<style scoped>
+<style>
 .info{
-  text-align: center;
+  /*text-align: center;*/
 }
 </style>
