@@ -33,6 +33,7 @@ const cheerio = require('cheerio');
 import axios from 'axios';
 import StopInfo from './components/StopInfo';
 import RecentStops from './components/RecentStops';
+import { eventBus } from './main.js';
 export default {
   name: 'app',
   components: {
@@ -46,7 +47,8 @@ export default {
       stopNumber: '',
       queriedStop: { stopNumber: 0 , info: [{line: '-', name: 'Introduzca un nº de parada', time: '-'}]},/*{ time: 0, name: 'Aún no se ha consultado', line:0 },*/
       baseUrl: 'http://www.auvasa.es/parada.asp?codigo=',
-      recentStops: []
+      recentStops: [],
+      maxRecents: 5
     }
   },
   methods:{
@@ -86,6 +88,10 @@ export default {
         //console.log(self.queriedStop);
         if(!self.isInRecents(self.queriedStop)){
           self.recentStops.push(self.queriedStop);
+          if(self.recentStops.length>self.maxRecents){
+            self.recentStops.splice(0,1);
+          }
+          localStorage.setItem('recentStops', JSON.stringify(self.recentStops));
         }
         else{
           self.recentStops=self.recentStops;
@@ -108,6 +114,20 @@ export default {
         }
       }
       return false;
+    }
+  },
+  created(){
+    eventBus.$on('stopWasClicked',(data) => {
+      this.stopNumber=data;
+      this.queryStop();
+    });
+    if (localStorage.getItem("recentStops") === null) {
+      localStorage.setItem('recentStops', JSON.stringify(this.recentStops));
+    }
+    else {
+      console.log("already set");
+      this.recentStops = JSON.parse(localStorage.getItem('recentStops'));
+
     }
   }
 }

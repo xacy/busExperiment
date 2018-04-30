@@ -9,7 +9,7 @@
     </div>
     <div class="columns  is-centered">
       <div class="column is-half">
-        <nav class="level is-mobile"  v-for="recent in recentStops">
+        <nav class="level is-mobile"  v-for="recent in recentStops.slice().reverse()" @click="stopItsClicked(recent.stopNumber)">
           <div class="level-item has-text-centered">
             <div>
               <p class="heading">Parada</p>
@@ -25,7 +25,7 @@
           <div class="level-item has-text-centered">
             <div>
               <p class="heading">Última consulta</p>
-              <p class="title">{{ recent.lastQuery.toLocaleDateString([], {hour: '2-digit', minute:'2-digit'})}}</p>
+              <p class="title">{{ new Date(recent.lastQuery).toLocaleDateString([], {hour: '2-digit', minute:'2-digit'})}}</p>
             </div>
           </div>
         </nav>
@@ -36,6 +36,7 @@
 </template>
 
 <script>
+  import { eventBus } from '../main.js';
     export default {
       props: {
         recents: {
@@ -46,6 +47,11 @@
         return {
           recentStops: this.recents
         }
+      },
+      methods: {
+        stopItsClicked(stopNumber){
+          eventBus.clickStop(stopNumber);
+        }
       }
     }
 </script>
@@ -55,4 +61,7 @@
   width:9em;
   font-size:1rem!important;
 }
+  .level{
+    cursor: pointer;
+  }
 </style>

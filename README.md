@@ -4,8 +4,6 @@
 
 ## Todo
 
-* Make recent clickables
-* Local storage recent queries
 * Cors it's a problem, i can't make external calls without proxying through an external website
 and that's a no go.
 * Do the other points in the list and research a little more to see it can be circunvented.
@@ -20,3 +18,5 @@ if not mark it as finished.
 * ~~Queries debug~~
 * ~~Basic layout with an ui framework~~
 * ~~Recent components~~
+* ~~Make recent clickables~~
+* ~~Local storage recent queries~~
